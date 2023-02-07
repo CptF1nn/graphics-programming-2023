@@ -6,6 +6,8 @@
 #include <ituGL/geometry/ElementBufferObject.h>
 #include <iostream>
 #include <chrono>
+#include <vector>
+#include <cmath>
 #define M_PI           3.14159265358979323846  /* pi */
 
 int buildShaderProgram();
@@ -119,7 +121,8 @@ int main()
 
         // render
         // ------
-        deviceGL.Clear(0.4f, 0.1f, 0.2f, 1.0f);
+        Color clearColor(0.4f, 0.1f, 0.2f, 1.0f);
+        deviceGL.Clear(clearColor);
 
         // draw our first triangle
         glUseProgram(shaderProgram);

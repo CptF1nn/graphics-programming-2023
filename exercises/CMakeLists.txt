@@ -2,6 +2,9 @@
 SUBDIRLIST(SUBDIRS ${CMAKE_CURRENT_LIST_DIR})
 
 FOREACH(subdir ${SUBDIRS})
+	IF(NOT (${subdir} MATCHES "^.*exercise.*$"))
+		CONTINUE()
+	ENDIF()
 	set(TARGETNAME ${subdir})
     add_subdirectory(${subdir})
 	set_target_properties(${TARGETNAME} PROPERTIES

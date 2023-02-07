@@ -1,6 +1,7 @@
-# obtain the list of subdirectories
-SUBDIRLIST(SUBDIRS ${CMAKE_CURRENT_LIST_DIR})
+add_subdirectory(glad)
 
-FOREACH(subdir ${SUBDIRS})
-    add_subdirectory(${subdir})
-ENDFOREACH()
+set(GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only")
+set(GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only")
+add_subdirectory(glfw)
+add_subdirectory(itugl)
+add_subdirectory(stb)
