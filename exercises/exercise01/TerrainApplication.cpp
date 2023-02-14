@@ -39,6 +39,7 @@ struct Vertex
 };
 
 
+
 TerrainApplication::TerrainApplication()
     : Application(1024, 1024, "Terrain demo"), m_gridX(128), m_gridY(128), m_shaderProgram(0), vbo(), vao(), ebo(), vertexCount(0), wireframe(false)
 {
@@ -212,6 +213,30 @@ void TerrainApplication::Render()
 void TerrainApplication::Cleanup()
 {
     Application::Cleanup();
+}
+
+Vector3 GetColorFromHeight(float height)
+{
+    if (height > 0.3f)
+    {
+        return Vector3(1.0f, 1.0f, 1.0f); // Snow
+    }
+    else if (height > 0.1f)
+    {
+        return Vector3(0.3, 0.3f, 0.35f); // Rock
+    }
+    else if (height > -0.05f)
+    {
+        return Vector3(0.1, 0.4f, 0.15f); // Grass
+    }
+    else if (height > -0.1f)
+    {
+        return Vector3(0.6, 0.5f, 0.4f); // Sand
+    }
+    else
+    {
+        return Vector3(0.1f, 0.1f, 0.3f); // Water
+    }
 }
 
 void TerrainApplication::BuildShaders()
