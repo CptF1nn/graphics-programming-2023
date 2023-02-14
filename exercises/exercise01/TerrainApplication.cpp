@@ -1,9 +1,11 @@
 #include "TerrainApplication.h"
 
-// (todo) 01.1: Include the libraries you need
-
 #include <cmath>
 #include <iostream>
+#include <ituGL/geometry/VertexAttribute.h>
+#include <vector>
+#define STB_PERLIN_IMPLEMENTATION
+#include <stb_perlin.h>
 
 // Helper structures. Declared here only for this exercise
 struct Vector2
@@ -26,12 +28,19 @@ struct Vector3
     }
 };
 
-// (todo) 01.8: Declare an struct with the vertex format
+struct Vertex
+{
+    Vector3 position;
+    Vector2 texturePos;
+    Vector3 color;
+    Vector3 normal;
 
+    Vertex(Vector3 position, Vector2 texture, Vector3 color, Vector3 normal) : position(position), texturePos(texture), color(color), normal(normal) {}
+};
 
 
 TerrainApplication::TerrainApplication()
-    : Application(1024, 1024, "Terrain demo"), m_gridX(16), m_gridY(16), m_shaderProgram(0)
+    : Application(1024, 1024, "Terrain demo"), m_gridX(128), m_gridY(128), m_shaderProgram(0), vbo(), vao(), ebo(), vertexCount(0), wireframe(false)
 {
 }
 
@@ -41,24 +50,142 @@ void TerrainApplication::Initialize()
 
     // Build shaders and store in m_shaderProgram
     BuildShaders();
+    
+    glEnable(GL_DEPTH_TEST);
 
-    // (todo) 01.1: Create containers for the vertex position
+    VertexAttribute positionAttrib = VertexAttribute(Data::Type::Float, 3, GL_FALSE);
+    VertexAttribute textureAttrib = VertexAttribute(Data::Type::Float, 2, GL_FALSE);
+    VertexAttribute colorAttrib = VertexAttribute(Data::Type::Float, 3, GL_FALSE);
+    VertexAttribute normalAttrib = VertexAttribute(Data::Type::Float, 3, GL_FALSE);
 
+    std::vector<Vertex> vertices;
 
-    // (todo) 01.1: Fill in vertex data
+    std::vector<int> indices;
 
+    for (float x = 0; x < m_gridX+1; x += 1.0f)
+    {
+        for (float y = 0; y < m_gridY+1; y += 1.0f)
+        {
+            float calcX = (x / m_gridX) - 0.5f;
+            float calcY = (y / m_gridY) - 0.5f;
 
-    // (todo) 01.1: Initialize VAO, and VBO
+            float calcZ = stb_perlin_fbm_noise3(calcX * 8.0f, calcY * 8.0f, 0.0f, 2.0f, 0.5f, 6);
 
+            Vector3 pos = Vector3(calcX, calcY, calcZ * 0.1f);
+            Vector2 tex = Vector2(x, y);
+            Vector3 color;
+            if (calcZ <= -0.3f)
+            {
+                color = Vector3(0.0f, 0.0f, 0.85f);
+            } 
+            else if (calcZ <= -0.05f)
+            {
+                color = Vector3(0.8f, 0.8f, 0.1f);
+            }
+            else if (calcZ <= 0.05f) 
+            {
+                color = Vector3(0.1f, 0.8f, 0.3f);
+            }
+            else if (calcZ <= 0.55f) 
+            {
+                color = Vector3(0.1f, 0.1f, 0.1f);
+            }
+            else
+            {
+                color = Vector3(0.95f, 0.95f, 0.98f);
+            }
 
-    // (todo) 01.5: Initialize EBO
+            Vector3 normal = Vector3();
 
+            vertices.push_back(Vertex(pos, tex, color, normal));
+        }
+    }
 
-    // (todo) 01.1: Unbind VAO, and VBO
+    for (size_t x = 0; x < m_gridX + 1; x++)
+    {
+        for (size_t y = 0; y < m_gridY + 1; y++)
+        {
+            int selfI =     (x * (m_gridY + 1)) + y;
+            int leftI =     ((x - 1) * (m_gridY + 1)) + y;
+            int rightI =    ((x + 1) * (m_gridY + 1)) + y;
+            int upI =       (x * (m_gridY + 1)) + (y + 1);
+            int downI =     (x * (m_gridY + 1)) + (y - 1);
+            Vector3 left, right, up, down;
+            if (x == 0)
+            {
+                left = vertices[selfI].position;
+            }
+            else 
+            {
+                left = vertices[leftI].position;
+            }
+            if (x == m_gridX)
+            {
+                right = vertices[selfI].position;
+            }
+            else 
+            {
+                right = vertices[rightI].position;
+            }
+            if (y == 0)
+            {
+                down = vertices[selfI].position;
+            }
+            else 
+            {
+                down = vertices[downI].position;
+            }
+            if (y == m_gridY)
+            {
+                up = vertices[selfI].position;
+            }
+            else 
+            {
+                up = vertices[upI].position;
+            }
+            float deltaX = (right.z - left.z) / (right.x - left.x);
+            float deltaY = (up.z - down.z) / (up.y - down.y);
+            vertices[selfI].normal = Vector3(deltaX, deltaY, 1.0f).Normalize();
+        }
+    }
 
+    for (size_t x = 1; x < m_gridX+1; x++)
+    {
+        for (size_t y = 1; y < m_gridY+1; y++)
+        {
+            int bot_left =  ((y - 1) * (m_gridX+1)) + (x - 1);
+            int top_left =  (y * (m_gridX+1)) + (x - 1);
+            int bot_right = ((y - 1) * (m_gridX+1)) + x;
+            int top_right = (y * (m_gridX+1)) + x;
+            indices.push_back(bot_left);
+            indices.push_back(top_left);
+            indices.push_back(bot_right);
+            indices.push_back(bot_right);
+            indices.push_back(top_left);
+            indices.push_back(top_right);
+        }
+    }
 
-    // (todo) 01.5: Unbind EBO
+    vertexCount = (m_gridX+1) * (m_gridY+1);
 
+    vao.Bind();
+    vbo.Bind();
+    ebo.Bind();
+
+    ebo.AllocateData(std::span(indices));
+    vbo.AllocateData(std::span(vertices));
+
+    vao.SetAttribute(0, positionAttrib, 0, sizeof(Vertex));
+    vao.SetAttribute(1, textureAttrib, sizeof(Vector3), sizeof(Vertex));
+    vao.SetAttribute(2, colorAttrib, sizeof(Vector3) + sizeof(Vector2), sizeof(Vertex));
+    vao.SetAttribute(3, normalAttrib, sizeof(Vector3) + sizeof(Vector2) + sizeof(Vector3), sizeof(Vertex));
+
+    vao.Bind();
+    vbo.Bind();
+    ebo.Bind();
+
+    if (wireframe)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 void TerrainApplication::Update()
@@ -78,8 +205,8 @@ void TerrainApplication::Render()
     // Set shader to be used
     glUseProgram(m_shaderProgram);
 
-    // (todo) 01.1: Draw the grid
-
+    glDrawElements(GL_TRIANGLES, 6 * vertexCount, GL_UNSIGNED_INT, 0);
+    //glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 }
 
 void TerrainApplication::Cleanup()

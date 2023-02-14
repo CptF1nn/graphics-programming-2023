@@ -1,8 +1,9 @@
 #pragma once
 
 #include <ituGL/application/Application.h>
-
-// (todo) 01.1: Include the libraries you need
+#include <ituGL/geometry/VertexBufferObject.h>
+#include <ituGL/geometry/VertexArrayObject.h>
+#include <ituGL/geometry/ElementBufferObject.h>
 
 
 class TerrainApplication : public Application
@@ -24,9 +25,10 @@ private:
     unsigned int m_gridX, m_gridY;
     unsigned int m_shaderProgram;
 
-    // (todo) 01.1: Declare an VBO, VAO
+    VertexBufferObject vbo;
+    VertexArrayObject vao;
+    ElementBufferObject ebo;
 
-
-    // (todo) 01.5: Declare an EBO
-
+    int vertexCount;
+    bool wireframe;
 };

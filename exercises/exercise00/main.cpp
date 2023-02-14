@@ -16,11 +16,11 @@ void processInput(GLFWwindow* window);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 800;
-const unsigned int circleEdges = 1024*32;
+const unsigned int circleEdges = 2;
 const float rotationSpeed = 100.0f;
 const double length = sqrt(2) / 2;
 
-const bool wireframe = false;
+const bool wireframe = true;
 
 int main()
 {
