@@ -7,21 +7,31 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <chrono>
+using namespace std::chrono;
+
+const float gravityConstant = 9.8f;
 
 // Structure defining that Particle data
 struct Particle
 {
     glm::vec2 position;
-    // (todo) 02.X: Add more vertex attributes
- 
+    float size;
+    float birth;
+    float duration;
+    Color color;
+    glm::vec2 velocity;
 };
 
 // List of attributes of the particle. Must match the structure above
-const std::array<VertexAttribute, 1> s_vertexAttributes =
+const std::array<VertexAttribute, 6> s_vertexAttributes =
 {
     VertexAttribute(Data::Type::Float, 2), // position
-    // (todo) 02.X: Add more vertex attributes
-
+    VertexAttribute(Data::Type::Float, 1), // size
+    VertexAttribute(Data::Type::Float, 1), // birth
+    VertexAttribute(Data::Type::Float, 1), // duration
+    VertexAttribute(Data::Type::Float, 4), // color
+    VertexAttribute(Data::Type::Float, 2), // velocity
 };
 
 
@@ -41,11 +51,15 @@ void ParticlesApplication::Initialize()
     // Initialize the mouse position with the current position of the mouse
     m_mousePosition = GetMainWindow().GetMousePosition(true);
 
-    // (todo) 02.2: Enable the GL_PROGRAM_POINT_SIZE feature on the device
+    m_currentTimeLocation = m_shaderProgram.GetUniformLocation("currentTime");
 
+    m_gravityLocation = m_shaderProgram.GetUniformLocation("gravity");
 
-    // (todo) 02.3: Enable the GL_BLEND feature on the device
+    m_startTime = system_clock::now();
 
+    GetDevice().EnableFeature(GL_PROGRAM_POINT_SIZE);
+    GetDevice().EnableFeature(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
     // We need to enable V-sync, otherwise the framerate would be too high and spawn multiple particles in one click
     GetDevice().SetVSyncEnabled(true);
@@ -60,17 +74,21 @@ void ParticlesApplication::Update()
     // Get the mouse position this frame
     glm::vec2 mousePosition = window.GetMousePosition(true);
 
+    auto curTime = system_clock::now();
+
     // Emit particles while the left button is pressed
     if (window.IsMouseButtonPressed(Window::MouseButton::Left))
     {
-        // (todo) 02.X: Compute new particle attributes here
+        float deltaTime = (duration_cast<milliseconds>(curTime - m_lastFrameTime).count()) / 1000.0f;
 
+        glm::vec2 vel = (-(m_mousePosition - mousePosition)) * deltaTime * 200.0f;
 
-        EmitParticle(mousePosition);
+        EmitParticle(mousePosition, RandomRange(8.0f, 20.0f), RandomRange(1.0f, 2.0f), RandomColor(), vel);
     }
 
     // save the mouse position (to compare next frame and obtain velocity)
     m_mousePosition = mousePosition;
+    m_lastFrameTime = curTime;
 }
 
 void ParticlesApplication::Render()
@@ -81,11 +99,11 @@ void ParticlesApplication::Render()
     // Set our particles shader program
     m_shaderProgram.Use();
 
-    // (todo) 02.4: Set CurrentTime uniform
+    float curTime = (duration_cast<milliseconds>(system_clock::now() - m_startTime).count()) / 1000.0f;
 
+    glUniform1f(m_currentTimeLocation, curTime);
 
-    // (todo) 02.6: Set Gravity uniform
-
+    glUniform1f(m_gravityLocation, -gravityConstant * 0.1f);
 
     // Bind the particle system VAO
     m_vao.Bind();
@@ -142,13 +160,16 @@ void ParticlesApplication::InitializeShaders()
     }
 }
 
-void ParticlesApplication::EmitParticle(const glm::vec2& position)
+void ParticlesApplication::EmitParticle(const glm::vec2& position, const float& size, const float& duration, const Color& color, const glm::vec2& velocity)
 {
     // Initialize the particle
     Particle particle;
     particle.position = position;
-    // (todo) 02.X: Set the value for other attributes of the particle
-
+    particle.size = size;
+    particle.duration = duration;
+    particle.birth = (duration_cast<milliseconds>(system_clock::now() - m_startTime).count()) / 1000.0f;
+    particle.color = color;
+    particle.velocity = velocity;
 
     // Get the index in the circular buffer
     unsigned int particleIndex = m_particleCount % m_particleCapacity;

@@ -38,8 +38,6 @@ struct Vertex
     Vertex(Vector3 position, Vector2 texture, Vector3 color, Vector3 normal) : position(position), texturePos(texture), color(color), normal(normal) {}
 };
 
-
-
 TerrainApplication::TerrainApplication()
     : Application(1024, 1024, "Terrain demo"), m_gridX(128), m_gridY(128), m_shaderProgram(0), vbo(), vao(), ebo(), vertexCount(0), wireframe(false)
 {

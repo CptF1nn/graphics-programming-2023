@@ -2,13 +2,11 @@
 
 out vec4 FragColor;
 
-// (todo) 02.5: Add Color input variable here
-
+in vec4 vertColor;
 
 void main()
 {
-	// (todo) 02.3: Compute alpha using the built-in variable gl_PointCoord
-
-
-	FragColor = vec4(1, 1, 1, 1);
+	float circleLength = length(((gl_PointCoord * 2) - vec2(1,1)));
+	vec4 newColor = vec4(1, 1, 1, 1 - circleLength);
+	FragColor = newColor * vertColor;
 }

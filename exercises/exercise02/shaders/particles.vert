@@ -1,16 +1,26 @@
 #version 330 core
 
 layout (location = 0) in vec2 ParticlePosition;
-// (todo) 02.X: Add more vertex attributes
+layout (location = 1) in float Size;
+layout (location = 2) in float Birth;
+layout (location = 3) in float Duration;
+layout (location = 4) in vec4 Color;
+layout (location = 5) in vec2 Velocity;
 
+out vec4 vertColor;
 
-// (todo) 02.5: Add Color output variable here
-
-
-// (todo) 02.X: Add uniforms
-
+uniform float currentTime;
+uniform float gravity;
 
 void main()
 {
-	gl_Position = vec4(ParticlePosition, 0.0, 1.0);
+	float age = currentTime - Birth;
+	float scale = Duration - age;
+	gl_PointSize = Size * scale;
+
+	vec2 velAge = Velocity * age;
+	vec2 gravAge = vec2(0.0, age * age * 0.5 * gravity);
+
+	gl_Position = vec4(ParticlePosition + gravAge + velAge, 0.0, 1.0);
+	vertColor = Color;
 }
