@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿/.vs
 /out/build/x64-Debug
 
@@ -1057,3 +1058,8 @@ dkms.conf
 *.uf2
 # Raspberry Pi Pico disassembler file
 *.dis
+=======
+﻿*.ini
+exercises/exercise06/Library
+exercises/exercise06/Logs
+exercises/exercise06/UserSettings
